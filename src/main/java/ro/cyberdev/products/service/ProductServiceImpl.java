@@ -21,7 +21,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public String createProduct(CreateProductRestModel productRestModel) {
+    public String createProduct(CreateProductRestModel productRestModel) throws Exception {
         String productId = UUID.randomUUID().toString();
 
         //TODO: Persist ProductDetails into a database table before publishing an Event
@@ -34,19 +34,25 @@ public class ProductServiceImpl implements ProductService {
                         productRestModel.getQuantity());
 
         // send message async and not wait for a result
-        CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
-                kafkaTemplate.send("product-created-events-topic", productId, productCreatedEvent);
-        future.whenComplete((result, ex) -> {
-            if (ex != null) {
-                log.error("Error sending message: " + ex.getMessage());
-            } else {
-                log.info("Message sent successfully" + result.getRecordMetadata());
-            }
-        });
+//        CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
+//                kafkaTemplate.send("product-created-events-topic", productId, productCreatedEvent);
+//        future.whenComplete((result, ex) -> {
+//            if (ex != null) {
+//                log.error(" ***** Error sending message: " + ex.getMessage());
+//            } else {
+//                log.info(" ***** Message sent successfully" + result.getRecordMetadata());
+//            }
+//        });
 
         // block the execution (current thread) until the message is sent to Kafka (execution is completed)
-        // sync execution
+        // synchronous execution
 //        future.join();
+
+        // Synchronous execution with try-catch
+        SendResult<String, ProductCreatedEvent> result =
+                kafkaTemplate.send("product-created-events-topic", productId, productCreatedEvent).get();
+
+        log.info(" ***** Returning product id: " + productId);
 
         return productId;
     }
