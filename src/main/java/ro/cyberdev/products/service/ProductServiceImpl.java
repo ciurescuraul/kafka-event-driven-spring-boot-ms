@@ -49,8 +49,14 @@ public class ProductServiceImpl implements ProductService {
 //        future.join();
 
         // Synchronous execution with try-catch
+        log.info(" ***** Before publishing a ProductCreatedEvent");
+
         SendResult<String, ProductCreatedEvent> result =
                 kafkaTemplate.send("product-created-events-topic", productId, productCreatedEvent).get();
+
+        log.info("Partition: " + result.getRecordMetadata().partition());
+        log.info("Topic: " + result.getRecordMetadata().topic());
+        log.info("Offset: " + result.getRecordMetadata().offset());
 
         log.info(" ***** Returning product id: " + productId);
 
